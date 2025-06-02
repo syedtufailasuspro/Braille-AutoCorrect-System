@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="en" id="htmlRoot">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Braille Sentence Builder</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="icon" href="{{ url_for('static', filename='favicon.png') }}" type="image/png">
+</head>
+<body>
+    <div class="container">
+        <h1 id="mainTitle">🔤 Braille Sentence Builder</h1>
+        
+        <style>
+        /* Language Toggle Slider Styles */
+        .language-toggle {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 12px 20px;
+            border-radius: 25px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+            z-index: 1000;
+            border: 2px solid rgba(79, 172, 254, 0.2);
+        }
+
+        .language-label {
+            font-weight: bold;
+            font-size: 1em;
+            color: #333;
+            transition: color 0.3s ease;
+        }
+
+        .language-label.active {
+            color: #4facfe;
+        }
+
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 70px;
+            height: 34px;
+        }
+
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 17px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 26px;
+            width: 26px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        input:checked + .slider {
+            background-color: #4facfe;
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(36px);
+        }
+
+        .slider:focus {
+            box-shadow: 0 0 1px #4facfe;
+        }
+
+        /* Language change animation */
+        .language-switching {
+            opacity: 0.7;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+
+        /* Status indicator */
+        .language-status {
+            position: fixed;
+            top: 80px;
+            right: 20px;
+            background: rgba(79, 172, 254, 0.9);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            z-index: 999;
+            transform: translateY(-20px);
+            opacity: 0;
+            transition: all 0.3s ease;
+        }
+
+        .language-status.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        .braille-mapping {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        .mapping-item {
+            background: #f8f9fa;
+            padding: 8px;
+            border-radius: 4px;
+            text-align: center;
+            font-family: monospace;
+            border: 1px solid #e9ecef;
+        }
+        </style>
+
+        <!-- Language Toggle -->
+        <div class="language-toggle">
+            <span class="language-label active" id="englishLabel">English</span>
+            <label class="switch">
+                <input type="checkbox" id="languageToggle">
+                <span class="slider"></span>
+            </label>
+            <span class="language-label" id="hindiLabel">हिंदी</span>
+        </div>
+
+        <!-- Status indicator -->
+        <div class="language-status" id="languageStatus"></div>
+        
+        <!-- Sentence Display -->
+        <div class="sentence-display">
+            <div class="sentence-text" id="sentenceText">Start typing your sentence...</div>
+            <div class="word-count" id="wordCount">Words: 0</div>
+        </div>
+
+        <!-- Input Section -->
+        <div class="input-section">
+            <div class="input-group">
+                <label for="brailleInput" id="inputLabel">Braille Input (d,w,k,o,q,p keys):</label>
+                <input type="text" id="brailleInput" placeholder="e.g., 'dw ko doq'" autocomplete="off">
+            </div>
+            
+            <div class="conversion-display" id="conversionDisplay">
+                Converted word will appear here...
+            </div>
+
+            <div class="buttons">
+                <button class="btn-primary" onclick="getSuggestions()" id="btnSuggestions">Get Suggestions</button>
+                <button class="btn-success" onclick="addCurrentWord()" id="btnAddWord">Add Word to Sentence</button>
+                <button class="btn-warning" onclick="clearCurrentInput()" id="btnClearInput">Clear Input</button>
+                <button class="btn-danger" onclick="clearSentence()" id="btnClearSentence">Clear Sentence</button>
+            </div>
+        </div>
+
+        <!-- Suggestions Display -->
+        <div class="suggestions-container" id="suggestionsContainer" style="display: none;">
+            <div class="suggestions-title" id="suggestionsTitle">Word Suggestions (Click to select):</div>
+            <div id="suggestionsList"></div>
+        </div>
+
+        <!-- Status Bar -->
+        <div class="status-bar" id="statusBar">
+            Ready - Enter Braille input using d,w,k,o,q,p keys
+        </div>
+
+        <!-- Help Section -->
+        <div class="help-section">
+            <div class="help-title" id="helpTitle">Braille Key Mapping:</div>
+            <div class="braille-mapping" id="brailleMappingContainer">
+                <!-- Mappings will be populated by JavaScript -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Keyboard Shortcuts -->
+    <div class="keyboard-shortcuts" id="keyboardShortcuts">
+        <strong>Shortcuts:</strong><br>
+        Ctrl+ 1-5: Select suggestion<br>
+        Enter: Get suggestions<br>
+        Ctrl+Enter: Add word<br>
+        Esc: Clear input
+    </div>
+
+    <script>
+        // Language content objects
+        const languages = {
+            english: {
+                title: "🔤 Braille Sentence Builder",
+                sentenceText: "Start typing in Braille Input box...",
+                wordCount: "Words: 0",
+                inputLabel: "Braille Input (d:1,w:2,q:3,k:3,o:4,p:5 keys):",
+                placeholder: "e.g., 'dw ko doq'",
+                conversionDisplay: "Converted word will appear here...",
+                btnSuggestions: "Get Suggestions",
+                btnAddWord: "Add Word to Sentence",
+                btnClearInput: "Clear Input",
+                btnClearSentence: "Clear Sentence",
+                suggestionsTitle: "Word Suggestions (Click to select):",
+                statusBar: "Ready - Enter Braille input using d,w,k,o,q,p keys",
+                helpTitle: "Braille-Key Mapping Chart:",
+                shortcuts: "<strong>Shortcuts:</strong><br>Ctrl+ 1-5: Select suggestion<br>Enter: Get suggestions<br>Ctrl+Enter: Add word<br>Esc: Clear input",
+                languageChanged: "Language changed to English"
+            },
+            hindi: {
+                title: "🕉️ ब्रेल वाक्य निर्माता",
+                sentenceText: "ब्रेल इनपुट मे वाक्य टाइप करना शुरू करें...",
+                wordCount: "शब्द: 0",
+                inputLabel: "ब्रेल इनपुट (d:1,w:2,q:3,k:3,o:4,p:5 कीज़):",
+                placeholder: "उदाहरण: 'dw ko doq'",
+                conversionDisplay: "परिवर्तित शब्द यहाँ दिखाई देगा...",
+                btnSuggestions: "सुझाव प्राप्त करें",
+                btnAddWord: "वाक्य में शब्द जोड़ें",
+                btnClearInput: "इनपुट साफ़ करें",
+                btnClearSentence: "वाक्य साफ़ करें",
+                suggestionsTitle: "शब्द सुझाव (चुनने के लिए क्लिक करें):",
+                statusBar: "तैयार - d,w,k,o,q,p कीज़ का उपयोग करके ब्रेल इनपुट दर्ज करें",
+                helpTitle: "ब्रेल-की मैपिंग चार्ट:",
+                shortcuts: "<strong>शॉर्टकट्स:</strong><br>Ctrl+ 1-5: सुझाव चुनें<br>Enter: सुझाव प्राप्त करें<br>Ctrl+Enter: शब्द जोड़ें<br>Esc: इनपुट साफ़ करें",
+                languageChanged: "भाषा बदलकर हिंदी की गई"
+            }
+        };
+
+        // Braille mappings for both languages
+        const brailleMappings = {
+            english: {
+                'd': 'a', 'dw': 'b', 'dk': 'c', 'dko': 'd', 'do': 'e', 'dkw': 'f',
+                'dkow': 'g', 'dow': 'h', 'kw': 'i', 'kow': 'j', 'dq': 'k', 'dqw': 'l',
+                'dkq': 'm', 'dkoq': 'n', 'doq': 'o', 'dkqw': 'p', 'dkoqw': 'q', 'doqw': 'r',
+                'kqw': 's', 'koqw': 't', 'dpq': 'u', 'dpqw': 'v', 'kopw': 'w', 'dkpq': 'x',
+                'dkopq': 'y', 'dopq': 'z'
+            },
+            hindi: {
+                // Vowels
+                'd': 'अ', 'do': 'आ', 'dk': 'इ', 'dko': 'ई', 'dp': 'उ', 'dpo': 'ऊ',
+                'dpq': 'ए', 'doq': 'ओ',
+                
+                // Consonants
+                'dw': 'क', 'dkw': 'ख', 'dkow': 'ग', 'dow': 'घ', 'kw': 'च', 'kow': 'छ',
+                'dq': 'ज', 'dqw': 'झ', 'dkq': 'ट', 'dkoq': 'ठ', 'kqw': 'ड', 'koqw': 'ढ',
+                'dqp': 'त', 'dqpw': 'थ', 'kqp': 'द', 'kqpw': 'ध', 'dkpq': 'न',
+                'dpw': 'प', 'dpqw': 'फ', 'kpw': 'ब', 'kopw': 'भ', 'dkp': 'म',
+                'dkqw': 'य', 'doqw': 'र', 'dkoqw': 'ल', 'kopq': 'व', 'qw': 'श',
+                'qpw': 'ष', 'kq': 'स', 'dow': 'ह',
+                
+                // Special characters
+                'dkow': 'ं', 'dpq': 'ः',
+                
+                // Vowel signs (matras)
+                'o': 'ा', 'k': 'ि', 'ko': 'ी', 'p': 'ु', 'po': 'ू', 'pq': 'े', 'oq': 'ो'
+            }
+        };
+
+        let currentLanguage = 'english'; // Default language
+
+        // Initialize the application
+        document.addEventListener('DOMContentLoaded', function() {
+            const languageToggle = document.getElementById('languageToggle');
+            const englishLabel = document.getElementById('englishLabel');
+            const hindiLabel = document.getElementById('hindiLabel');
+            const languageStatus = document.getElementById('languageStatus');
+            const body = document.body;
+            
+            // Initialize the toggle based on current language from backend
+            function initializeLanguageToggle() {
+                fetch('/api/current-language')
+                    .then(response => response.json())
+                    .then(data => {
+                        currentLanguage = data.language;
+                        updateToggleUI();
+                        updateLanguage();
+                        updateBrailleMappings();
+                    })
+                    .catch(error => {
+                        console.error('Error getting current language:', error);
+                        // Fallback to default
+                        updateLanguage();
+                        updateBrailleMappings();
+                    });
+            }
+            
+            // Update UI based on current language
+            function updateToggleUI() {
+                if (currentLanguage === 'hindi') {
+                    languageToggle.checked = true;
+                    englishLabel.classList.remove('active');
+                    hindiLabel.classList.add('active');
+                } else {
+                    languageToggle.checked = false;
+                    englishLabel.classList.add('active');
+                    hindiLabel.classList.remove('active');
+                }
+            }
+            
+            // Handle language toggle
+            languageToggle.addEventListener('change', function() {
+                const newLanguage = this.checked ? 'hindi' : 'english';
+                
+                if (newLanguage === currentLanguage) {
+                    return; // No change needed
+                }
+                
+                // Add switching animation
+                body.classList.add('language-switching');
+                
+                // Make API call to change language
+                fetch(`/set-language/${newLanguage}`, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        currentLanguage = newLanguage;
+                        updateToggleUI();
+                        updateLanguage();
+                        updateBrailleMappings();
+                        showLanguageStatus(`Language changed to ${data.display_name}`);
+                        
+                        // Optional: Refresh suggestions if there's an active input
+                        refreshCurrentSuggestions();
+                    } else {
+                        // Revert toggle if API call failed
+                        this.checked = currentLanguage === 'hindi';
+                        showLanguageStatus('Failed to change language', true);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error changing language:', error);
+                    // Revert toggle on error
+                    this.checked = currentLanguage === 'hindi';
+                    showLanguageStatus('Error changing language', true);
+                })
+                .finally(() => {
+                    // Remove switching animation
+                    setTimeout(() => {
+                        body.classList.remove('language-switching');
+                    }, 300);
+                });
+            });
+            
+            // Function to refresh current suggestions (if applicable)
+            function refreshCurrentSuggestions() {
+                // Check if there's an active braille input
+                const brailleInput = document.querySelector('input[type="text"]');
+                if (brailleInput && brailleInput.value.trim()) {
+                    // Trigger a new suggestion request
+                    const event = new Event('input', { bubbles: true });
+                    brailleInput.dispatchEvent(event);
+                }
+            }
+            
+            // Add keyboard shortcut (Ctrl+L or Cmd+L) to toggle language
+            document.addEventListener('keydown', function(event) {
+                if ((event.ctrlKey || event.metaKey) && event.key === 'l') {
+                    event.preventDefault();
+                    languageToggle.click();
+                }
+            });
+            
+            // Initialize on page load
+            initializeLanguageToggle();
+            
+            // Update API calls to include language context
+            const originalFetch = window.fetch;
+            window.fetch = function(...args) {
+                // Add current language to relevant API calls
+                if (args[0] && args[0].includes('/api/')) {
+                    const url = new URL(args[0], window.location.origin);
+                    url.searchParams.set('lang', currentLanguage);
+                    args[0] = url.toString();
+                }
+                return originalFetch.apply(this, args);
+            };
+        });
+
+        // Update all UI text based on current language
+        function updateLanguage() {
+            const lang = languages[currentLanguage];
+            const htmlRoot = document.getElementById('htmlRoot');
+            
+            // Update HTML lang attribute
+            htmlRoot.lang = currentLanguage === 'hindi' ? 'hi' : 'en';
+            
+            // Update all text content
+            document.getElementById('mainTitle').textContent = lang.title;
+            document.title = currentLanguage === 'hindi' ? 'ब्रेल वाक्य निर्माता' : 'Braille Sentence Builder';
+            document.getElementById('sentenceText').textContent = lang.sentenceText;
+            document.getElementById('wordCount').textContent = lang.wordCount;
+            document.getElementById('inputLabel').textContent = lang.inputLabel;
+            document.getElementById('brailleInput').placeholder = lang.placeholder;
+            document.getElementById('conversionDisplay').textContent = lang.conversionDisplay;
+            document.getElementById('btnSuggestions').textContent = lang.btnSuggestions;
+            document.getElementById('btnAddWord').textContent = lang.btnAddWord;
+            document.getElementById('btnClearInput').textContent = lang.btnClearInput;
+            document.getElementById('btnClearSentence').textContent = lang.btnClearSentence;
+            document.getElementById('suggestionsTitle').textContent = lang.suggestionsTitle;
+            document.getElementById('statusBar').textContent = lang.statusBar;
+            document.getElementById('helpTitle').textContent = lang.helpTitle;
+            document.getElementById('keyboardShortcuts').innerHTML = lang.shortcuts;
+        }
+
+        // Update Braille mappings display
+        function updateBrailleMappings() {
+            const mappingContainer = document.getElementById('brailleMappingContainer');
+            const mappings = brailleMappings[currentLanguage];
+            
+            mappingContainer.innerHTML = '';
+            
+            Object.entries(mappings).forEach(([key, value]) => {
+                const mappingItem = document.createElement('div');
+                mappingItem.className = 'mapping-item';
+                mappingItem.textContent = `${key} = ${value}`;
+                mappingContainer.appendChild(mappingItem);
+            });
+        }
+
+        // Show language status message
+        function showLanguageStatus(message, isError = false) {
+            const languageStatus = document.getElementById('languageStatus');
+            languageStatus.textContent = message;
+            languageStatus.style.background = isError ? 'rgba(255, 107, 107, 0.9)' : 'rgba(79, 172, 254, 0.9)';
+            languageStatus.classList.add('show');
+            
+            setTimeout(() => {
+                languageStatus.classList.remove('show');
+            }, 2000);
+        }
+
+        // Get current language mappings
+        function getCurrentMappings() {
+            return brailleMappings[currentLanguage];
+        }
+
+        // Placeholder functions for the main functionality
+        function getSuggestions() {
+            console.log('Getting suggestions for:', currentLanguage);
+            // Your suggestion logic here
+        }
+
+        function addCurrentWord() {
+            console.log('Adding word in:', currentLanguage);
+            // Your add word logic here
+        }
+
+        function clearCurrentInput() {
+            document.getElementById('brailleInput').value = '';
+            document.getElementById('conversionDisplay').textContent = languages[currentLanguage].conversionDisplay;
+        }
+
+        function clearSentence() {
+            document.getElementById('sentenceText').textContent = languages[currentLanguage].sentenceText;
+            document.getElementById('wordCount').textContent = languages[currentLanguage].wordCount;
+        }
+
+        // Utility function to get current language (can be used by other scripts)
+        function getCurrentLanguage() {
+            return fetch('/api/current-language')
+                .then(response => response.json())
+                .then(data => data.language)
+                .catch(() => currentLanguage); // Return current state as fallback
+        }
+
+        // Make getCurrentLanguage available globally for other scripts
+        window.getCurrentLanguage = function() {
+            return currentLanguage;
+        };
+
+        // Make getCurrentMappings available globally for other scripts
+        window.getCurrentMappings = getCurrentMappings;
+    </script>
+
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+</body>
+</html>
