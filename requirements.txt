@@ -2,3 +2,4 @@ flask-cors==6.0.0
 Flask==3.0.3
 Flask-MySQLdb==2.0.0
 Flask-SocketIO==5.4.1
+gunicorn
