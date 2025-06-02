@@ -307,4 +307,4 @@ if __name__ == '__main__':
         else:
             print(f"⚠ {config['name']} module loaded but autocorrect instance not found")
     
-     main_app.run()
+    main_app.run()
