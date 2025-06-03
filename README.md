@@ -104,7 +104,7 @@ Suggestion Accuracy: Top-3 contains correct word 92-97% of time
 
 ### Installation
 ```bash
-git clone https://github.com/yourusername/braille-autocorrect.git
+git clone https://github.com/syedtufailasuspro/Braille-AutoCorrect-System.git
 cd braille-autocorrect
 
 python -m venv venv
@@ -134,19 +134,19 @@ curl -X POST http://localhost:5000/api/suggest-word \
 
 ## 📁 Project Structure
 ```
-braille-autocorrect/
+braille-autocorrect-system/
 ├── main.py              # Flask application entry point
 ├── app_hindi.py         # Hindi Braille processor
 ├── app_english.py       # English Braille processor
 ├── templates/
 │   └── index.html       # Web interface
-├── tests/
-│   ├── test_hindi.py    # Hindi system tests
-│   ├── test_english.py  # English system tests
-│   └── test_api.py      # API integration tests
-├── dictionaries/
-│   ├── hindi_words.txt  # Hindi vocabulary
-│   └── english_words.txt# English vocabulary
+├── static/
+│   └── css/
+│       └── style.css    #CSS sheet
+│   └── js/
+│       └── script.js    #JS script
+│   └── favicon.png
+├── large_freq_dict.txt  # English Words Dictionary
 └── requirements.txt     # Dependencies
 ```
 
