@@ -27,8 +27,8 @@ Output: "काज"       (Hindi word with auto-correction)
 | **Real-time conversion** | ✅ | ✅ |
 | **Fuzzy matching** | ~92% accuracy | ~95% accuracy |
 | **Learning engine** | Adapts to user patterns | Adapts to user patterns |
-| **Response time** | <50ms | <30ms |
-| **Dictionary size** | 1K+ words | 1K+ words |
+| **Response time** | <20ms | <40ms |
+| **Dictionary size** | 100 words | 82K+ words |
 
 ## 🏗️ Architecture Overview
 
