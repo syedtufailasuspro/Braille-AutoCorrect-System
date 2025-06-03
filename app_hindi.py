@@ -67,7 +67,7 @@ class BrailleInputProcessor:
         'qw': 'श',             # sha (dots 2,3)
         'qpw': 'ष',            # shha (dots 2,3,6)
         'kq': 'स',             # sa (dots 2,3,4)
-        'dow': 'ह',            # ha (dots 1,2,5)
+        'doww': 'ह',            # ha (dots 1,2,5)
         
         # Common conjuncts and special characters
         'dkowi': 'ं',           # anusvara (dots 1,2,4,5)
