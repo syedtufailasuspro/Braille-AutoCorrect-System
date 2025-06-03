@@ -158,7 +158,7 @@ braille-autocorrect-system/
 | **Data Structures** | Trie, BK-Tree | Fast search and fuzzy matching |
 | **Testing** | pytest, psutil | Unit tests and performance monitoring |
 | **Frontend** | HTML/CSS/JS | Simple web interface |
-| **Deployment** | Gunicorn, Docker | Production deployment |
+| **Deployment** | Gunicorn, Azure, Render | Production deployment |
 
 ## 🎯 API Endpoints
 
