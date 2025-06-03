@@ -70,8 +70,8 @@ class BrailleInputProcessor:
         'dow': 'ह',            # ha (dots 1,2,5)
         
         # Common conjuncts and special characters
-        'dkow': 'ं',           # anusvara (dots 1,2,4,5)
-        'dpq': 'ः',            # visarga (dots 1,3,6)
+        'dkowi': 'ं',           # anusvara (dots 1,2,4,5)
+        'dpqi': 'ः',            # visarga (dots 1,3,6)
     }
     
     # Vowel signs (matras) - used after consonants
