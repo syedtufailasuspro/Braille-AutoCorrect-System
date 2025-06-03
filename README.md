@@ -150,20 +150,6 @@ braille-autocorrect-system/
 └── requirements.txt     # Dependencies
 ```
 
-## 🧪 Testing
-
-Run the test suite:
-```bash
-python -m pytest tests/ -v
-```
-
-### Test Coverage
-- ✅ Braille pattern conversion
-- ✅ Auto-correction accuracy
-- ✅ Learning engine adaptation
-- ✅ API endpoint functionality
-- ✅ Performance benchmarks
-
 ## 🛠️ Tech Stack
 
 | Component | Technology | Purpose |
